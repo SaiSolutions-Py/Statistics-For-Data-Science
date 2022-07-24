@@ -1,0 +1,231 @@
+---
+title: "Week_09_jMadsen"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+# Assignment: ASSIGNMENT 6/7
+# Name: Madsen, Justin
+# Date: 2022-02-13
+
+## Set the working directory to the root of your DSC 520 directory
+setwd("C:\\Users\\MyDir\\Documents\\GitHub\\dsc520\\")
+
+## Load the `data/r4ds/heights.csv` to
+heights_df <- read.csv("data/r4ds/heights.csv")
+
+## Load the ggplot2 library
+library(ggplot2)
+library(readxl)
+library(ggm)
+library(car)
+
+## Fit a linear model using the `age` variable as the predictor and `earn` as the outcome
+age_lm <-  lm(earn ~ age, data=heights_df)
+
+## View the summary of your model using `summary()`
+summary(age_lm)
+
+## Creating predictions using `predict()`
+age_predict_df <- data.frame(earn = predict(age_lm, newdata = heights_df), age=heights_df$age)
+
+## Plot the predictions against the original data
+ggplot(data = heights_df, aes(y = earn, x = age)) +
+  geom_point(color='blue') +
+  geom_line(color='red',data = age_predict_df, aes(y=earn, x=age))
+
+mean_earn <- mean(heights_df$earn)
+## Corrected Sum of Squares Total
+sst <- sum((mean_earn - heights_df$earn)^2)
+## Corrected Sum of Squares for Model
+ssm <- sum((mean_earn - age_predict_df$earn)^2)
+## Residuals
+residuals <- heights_df$earn - age_predict_df$earn
+## Sum of Squares for Error
+sse <- sum(residuals^2)
+## R Squared R^2 = SSM\SST
+r_squared <- ssm/sst
+
+## Number of observations
+n <- length(heights_df$age)
+## Number of regression parameters
+p <- 2
+## Corrected Degrees of Freedom for Model (p-1)
+dfm <- p - 1
+## Degrees of Freedom for Error (n-p)
+dfe <- n - p
+## Corrected Degrees of Freedom Total:   DFT = n - 1
+dft <- n -1
+
+## Mean of Squares for Model:   MSM = SSM / DFM
+msm <- ssm / dfm
+## Mean of Squares for Error:   MSE = SSE / DFE
+mse <- sse / dfe
+## Mean of Squares Total:   MST = SST / DFT
+mst <- sst / dft
+## F Statistic F = MSM/MSE
+f_score <- msm / mse
+
+## Adjusted R Squared R2 = 1 - (1 - R2)(n - 1) / (n - p)
+adjusted_r_squared <- 1 - (1 - r_squared) * (n - 1) / (n - p)
+
+## Calculate the p-value from the F distribution
+p_value <- pf(f_score, dfm, dft, lower.tail=F)
+
+# ASSIGNMENT 7
+
+# Fit a linear model
+earn_lm <-  lm(age ~ earn + ed + race + height + sex, data=heights_df)
+
+# View the summary of your model
+summary(earn_lm)
+
+predicted_df <- data.frame(
+  earn = predict(earn_lm, newdata = heights_df),
+  ed=heights_df$ed, race=heights_df$race, height=heights_df$height,
+  age=heights_df$age, sex=heights_df$sex
+  )
+
+## Compute deviation (i.e. residuals)
+mean_earn <- mean(heights_df$earn)
+## Corrected Sum of Squares Total
+sst <- sum((mean_earn - heights_df$earn)^2)
+## Corrected Sum of Squares for Model
+ssm <- sum((mean_earn - age_predict_df$earn)^2)
+## Residuals
+residuals <- heights_df$earn - age_predict_df$earn
+## Sum of Squares for Error
+sse <- sum(residuals^2)
+## R Squared
+r_squared <- ssm/sst
+
+## Number of observations
+n <- length(heights_df$age)
+## Number of regression paramaters
+p <- 8
+## Corrected Degrees of Freedom for Model
+dfm <- p - 1
+## Degrees of Freedom for Error
+dfe <- n - p
+## Corrected Degrees of Freedom Total:   DFT = n - 1
+dft <- n - 1
+
+## Mean of Squares for Model:   MSM = SSM / DFM
+msm <- ssm / dfm
+## Mean of Squares for Error:   MSE = SSE / DFE
+mse <- sse / dfe
+## Mean of Squares Total:   MST = SST / DFT
+mst <- sst / dft
+## F Statistic
+f_score <- msm / mse
+
+## Adjusted R Squared R2 = 1 - (1 - R2)(n - 1) / (n - p)
+adjusted_r_squared <- 1 - (1 - r_squared) * (n - 1) / (n - p)
+
+# Housing
+
+# Read the excel and create the df
+housing_df <- read_excel("data/week-7-housing.xlsx")
+
+# Make same variables do the thing
+sale_price_lm <-  lm(sale_price ~ sq_ft_lot, data=housing_df)
+
+# Here I wanted to focus on the where and why, then factor how bedrooms affect price
+sale_reason_lm <-  lm(sale_price ~ sale_reason + zip5 + sitetype + bedrooms, data=housing_df)
+
+summary(sale_price_lm)
+# r2 = .01435 // ar2 = .01428
+summary(sale_reason_lm)
+# r2 = .07053 // ar2 = .06988
+# With added data, we can see that r2 drastically increases. When paired with reasoning
+# we can see that location and bedroom have a much larger effect on price than just
+# the size alone.
+
+housing_predicted_df <- data.frame(
+  sale_price = predict(sale_reason_lm, newdata = housing_df),
+  zip5=housing_df$zip5, sitetype=housing_df$sitetype, bedrooms=housing_df$bedrooms
+  )
+
+## Compute deviation (i.e. residuals)
+mean_price <- mean(housing_df$`Sale Price`)
+## Corrected Sum of Squares Total
+sst <- sum((mean_price - housing_df$`Sale Price`)^2)
+## Corrected Sum of Squares for Model
+ssm <- sum((mean_price - housing_predicted_df$sale_price)^2)
+## Residuals
+residuals <- housing_df$`Sale Price` - housing_predicted_df$sale_price
+## Sum of Squares for Error
+sse <- sum(residuals^2)
+## R Squared
+r_squared <- ssm/sst
+
+## Number of observations
+n <- length(housing_df$`Sale Price`)
+## Number of regression parameters
+p <- 4
+## Corrected Degrees of Freedom for Model
+dfm <- p - 1
+## Degrees of Freedom for Error
+dfe <- n - p
+## Corrected Degrees of Freedom Total:   DFT = n - 1
+dft <- n - 1
+
+## Mean of Squares for Model:   MSM = SSM / DFM
+msm <- ssm / dfm
+## Mean of Squares for Error:   MSE = SSE / DFE
+mse <- sse / dfe
+## Mean of Squares Total:   MST = SST / DFT
+mst <- sst / dft
+## F Statistic
+f_score <- msm / mse
+
+## Adjusted R Squared R2 = 1 - (1 - R2)(n - 1) / (n - p)
+adjusted_r_squared <- 1 - (1 - r_squared) * (n - 1) / (n - p)
+
+cor.test(housing_predicted_df$bedrooms, housing_predicted_df$sale_price, alternative = "two.sided", 
+         method = "pearson", conf.level = 0.95)
+cor.test(housing_predicted_df$zip5, housing_predicted_df$sale_price, alternative = "two.sided", 
+         method = "pearson", conf.level = 0.95)
+
+# The above indicates that bedroom numbers have a much higher correlation to price
+# than the location. The location still has a sizable correlation to 95% of the data though.
+
+pcor(c("Sale Price", "bedrooms"), var(housing_df))
+pcor(c("sale_price", "bedrooms"), var(housing_predicted_df))
+
+# the predicted data file has a much higher variance of .84 than the regular df
+# with a variance of only .22. This leads me to believe they are highly dependent
+# with the new model data.
+
+# casewise <- lm(sale_price ~ square_feet_total_living + bath_3qtr_count + bath_full_count+
+#      bath_half_count + bedrooms + building_grade + sale_instrument + sale_reason
+#    + sq_ft_lot + zip5,   data=housing_df)
+# summary(casewise)
+
+# outlierTest(casewise)
+# outlierTest(sale_price_lm)
+# outlierTest(sale_reason_lm)
+
+# updated_housing_df <- housing_df[-c(6429, 6438, 6437, 6431, 6430),]
+# Here I identified that several lines contain outliers and removed them.
+
+# updated_sale_reason_lm <- lm(sale_price ~ sale_reason + zip5 + sitetype + bedrooms, data = updated_housing_df)
+
+# I couldn't get this sorted out, and rather than trying to come up with a lame
+# excuse of why this is late, it boils down to I bit off more than I can chew with scheduling
+# and course work fell to the side a bit.
+
+# I plan on returning to this assignment in the coming week to get a better grasp on it.
+
+# For future notes, removing outliers keeps leaving differing variable lengths and I can't run
+# a lm on the new df. 
+
+```
+
+

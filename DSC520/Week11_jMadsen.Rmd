@@ -1,0 +1,226 @@
+---
+title: "ML Assignment"
+output: html_document
+date: '2022-03-04'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+
+# Import the boys
+library(ggplot2)
+library(class)
+library(dplyr)
+library(ggfortify)
+
+## Set the working directory to the root of your DSC 520 directory
+# used Mac formatting on this one since I'm on a business trip
+setwd("~/Documents/GitHub/dsc520/")
+
+# let's grab those dataframes
+binary_df <- read.csv("data/binary-classifier-data.csv")
+trinary_df <- read.csv("data/trinary-classifier-data.csv")
+
+# Let's scatterplot the x/y coordinates // Binary
+plot(x = binary_df$x, y = binary_df$y, main = "Binary Scatterplot", 
+     xlab = "X Coords", ylab = "Y Coords")
+
+# Let's scatterplot the x/y coordinates // Trinary
+plot(x = trinary_df$x, y = trinary_df$y, main = "Trinary Scatterplot", 
+     xlab = "X Coords", ylab = "Y Coords")
+
+# I keep wanting to plot the label, however I think that'll come later
+
+# For KNN I followed the guide here - https://towardsdatascience.com/k-nearest-neighbors-algorithm-with-examples-in-r-simply-explained-knn-1f2c88da405c
+
+# take a random sample of the dataframes
+random.binary <- sample(1:nrow(binary_df), 0.9 * nrow(binary_df))
+random.trinary <- sample(1:nrow(trinary_df), 0.9 * nrow(trinary_df))
+
+# create the normalize function
+normalize <- function(x) { (x - min(x))/(max(x) - min(x)) }
+
+
+# normalize the data
+binary.normalized <- as.data.frame(lapply(binary_df[,c(2,3)], normalize))
+trinary.normalized <- as.data.frame(lapply(trinary_df[,c(2,3)], normalize))
+
+# extract training sets
+binary.train <- binary.normalized[random.binary,]
+trinary.train <- trinary.normalized[random.trinary,]
+
+# extract testing sets
+binary.test <- binary.normalized[-random.binary,]
+trinary.test <- trinary.normalized[-random.trinary,]
+
+# extract 1st column of train dataset because it will be used as 'cl' argument in knn function.
+binary.target <- binary_df[random.binary,1]
+trinary.target <- trinary_df[random.trinary,1]
+
+# extract 1st column of test dataset to measure the accuracy
+binary.test.category <- binary_df[-random.binary,1]
+trinary.test.category <- trinary_df[-random.trinary,1]
+
+# run knn function for the desired k values
+binary.pr.3 <- knn(binary.train, binary.test, cl=binary.target, k=3)
+trinary.pr.3 <- knn(trinary.train, trinary.test, cl=trinary.target, k=3)
+
+binary.pr.5 <- knn(binary.train, binary.test, cl=binary.target, k=5)
+trinary.pr.5 <- knn(trinary.train, trinary.test, cl=trinary.target, k=5)
+
+binary.pr.10 <- knn(binary.train, binary.test, cl=binary.target, k=10)
+trinary.pr.10 <- knn(trinary.train, trinary.test, cl=trinary.target, k=10)
+
+binary.pr.15 <- knn(binary.train, binary.test, cl=binary.target, k=15)
+trinary.pr.15 <- knn(trinary.train, trinary.test, cl=trinary.target, k=15)
+
+binary.pr.20 <- knn(binary.train, binary.test, cl=binary.target, k=20)
+trinary.pr.20 <- knn(trinary.train, trinary.test, cl=trinary.target, k=20)
+
+binary.pr.25 <- knn(binary.train, binary.test, cl=binary.target, k=25)
+trinary.pr.25 <- knn(trinary.train, trinary.test, cl=trinary.target, k=25)
+ 
+# create a table for the tests
+tab.binary.3 <- table(binary.pr.3,binary.test.category)
+tab.trinary.3 <- table(trinary.pr.3,trinary.test.category)
+
+tab.binary.5 <- table(binary.pr.5,binary.test.category)
+tab.trinary.5 <- table(trinary.pr.5,trinary.test.category)
+
+tab.binary.10 <- table(binary.pr.10,binary.test.category)
+tab.trinary.10 <- table(trinary.pr.10,trinary.test.category)
+
+tab.binary.15 <- table(binary.pr.15,binary.test.category)
+tab.trinary.15 <- table(trinary.pr.15,trinary.test.category)
+
+tab.binary.20 <- table(binary.pr.20,binary.test.category)
+tab.trinary.20 <- table(trinary.pr.20,trinary.test.category)
+
+tab.binary.25 <- table(binary.pr.25,binary.test.category)
+tab.trinary.25 <- table(trinary.pr.25,trinary.test.category)
+
+# this function divides correct predictions by total number of predictions to compute accuracy
+accuracy <- function(x){sum(diag(x)/(sum(rowSums(x)))) * 100}
+
+# let's get those accuracy values
+binary.accuracy.3 <- accuracy(tab.binary.3)
+trinary.accuracy.3 <- accuracy(tab.trinary.3)
+
+binary.accuracy.5 <- accuracy(tab.binary.5)
+trinary.accuracy.5 <- accuracy(tab.trinary.5)
+
+binary.accuracy.10 <- accuracy(tab.binary.10)
+trinary.accuracy.10 <- accuracy(tab.trinary.10)
+
+binary.accuracy.15 <- accuracy(tab.binary.15)
+trinary.accuracy.15 <- accuracy(tab.trinary.15)
+
+binary.accuracy.20 <- accuracy(tab.binary.20)
+trinary.accuracy.20 <- accuracy(tab.trinary.20)
+
+binary.accuracy.25 <- accuracy(tab.binary.25)
+trinary.accuracy.25 <- accuracy(tab.trinary.25)
+
+# let's drop the k values into a vector
+k.values <- c(3, 5, 10, 15, 20, 25)
+
+# let's make a vector for all the binary accuracies
+binary.values <- c(binary.accuracy.3, binary.accuracy.5, binary.accuracy.10,
+                   binary.accuracy.15, binary.accuracy.20,binary.accuracy.25)
+
+# do it again, but with trinary
+trinary.values <- c(trinary.accuracy.3, trinary.accuracy.5, trinary.accuracy.10,
+                    trinary.accuracy.15, trinary.accuracy.20, trinary.accuracy.25)
+
+# let's make some nice little data frames
+binary.k.df <- data.frame(k.values, binary.values)
+trinary.k.df <- data.frame(k.values, trinary.values)
+
+# time for some plotting
+plot(x = binary.k.df$k.values, y = binary.k.df$binary.values,
+     main = "Binary Accuracy Scatterplot", xlab = "K Values", ylab = "Accuracy")
+
+plot(x = trinary.k.df$k.values, y = trinary.k.df$trinary.values, 
+     main = "Trinary Accuracy Scatterplot", xlab = "K Values", ylab = "Accuracy")
+
+# Based on what I've plotted, I don't think a linear classifer would work here.
+# the groupings don't show a linear trend with x/y coordinates. However, if I labeled
+# the dots by color for their label, maybe that would show a different trend.
+
+# The logistic model I used last week was overforecasted by 7%, whereas the accuracy
+# in this assignment was underforecasted by only 3-4%, making this method more accurate.
+
+### Part 2
+
+# make the data frame
+cluster.data.df <- read.csv("data/clustering-data.csv")
+
+# plot the data
+plot(x = cluster.data.df$x, y = cluster.data.df$y,
+     main = "Cluster Value Scatterplot", xlab = "X Values", ylab = "Y Values")
+
+# I referenced the below link for help with this section
+# https://towardsdatascience.com/k-means-clustering-concepts-and-implementation-in-r-for-data-science-32cae6a3ceba
+
+# create a function for within group sum of squares
+wssplot <- function(data, nc=13, seed=1234){
+  wss <- (nrow(data)-1)*sum(apply(data,2,var))
+  for (i in 2:nc){
+    set.seed(seed)
+    wss[i] <- sum(kmeans(data, centers=i)$withinss)}
+  plot(1:nc, wss, type="b", xlab="Number of Clusters",
+       ylab="Within groups sum of squares")
+  wss
+}
+
+# let's plot the elbow bend // This shows k = 2 is the optimal clusters
+# however, based on the plot above, I highly doubt that
+wssplot(cluster.data.df)
+
+# let's make some vectors for the kmean with cluster of X
+kmean.2 <- kmeans(cluster.data.df, 2)
+kmean.3 <- kmeans(cluster.data.df, 3)
+kmean.4 <- kmeans(cluster.data.df, 4)
+kmean.5 <- kmeans(cluster.data.df, 5)
+kmean.6 <- kmeans(cluster.data.df, 6)
+kmean.7 <- kmeans(cluster.data.df, 7)
+kmean.8 <- kmeans(cluster.data.df, 8)
+kmean.9 <- kmeans(cluster.data.df, 9)
+kmean.10 <- kmeans(cluster.data.df, 10)
+kmean.11 <- kmeans(cluster.data.df, 11)
+kmean.12 <- kmeans(cluster.data.df, 12)
+kmean.13 <- kmeans(cluster.data.df, 13)
+
+# time to plot them. I like the colors.
+# here, I'm not too sure what I'm looking for. I'm assuming this is a "reasonable
+# amount of groups to be around the data" sort of decetermination.
+autoplot(kmean.2, cluster.data.df, frame = TRUE)
+autoplot(kmean.3, cluster.data.df, frame = TRUE)
+autoplot(kmean.4, cluster.data.df, frame = TRUE)
+autoplot(kmean.5, cluster.data.df, frame = TRUE)
+autoplot(kmean.6, cluster.data.df, frame = TRUE)
+autoplot(kmean.7, cluster.data.df, frame = TRUE)
+autoplot(kmean.8, cluster.data.df, frame = TRUE)
+autoplot(kmean.9, cluster.data.df, frame = TRUE)
+autoplot(kmean.10, cluster.data.df, frame = TRUE)
+autoplot(kmean.11, cluster.data.df, frame = TRUE)
+autoplot(kmean.12, cluster.data.df, frame = TRUE)
+autoplot(kmean.13, cluster.data.df, frame = TRUE)
+
+# I'm not too sure what the instructions mean for calculating the difference from the means
+# however I would need to read up on which one of the methods in the below link would
+# best fit this data set. From my understanding, I would have to pick where the means
+# stop changing and make the first k in that cluster of means be my selected optimal
+# k value.
+
+# https://uc-r.github.io/kmeans_clustering#kmeans
+
+# I personally believe that the optimal clusters is either 3 or 5, with a higher
+# lean towards 5. This just based on how the charts look with the plotted clusters.
+
+```

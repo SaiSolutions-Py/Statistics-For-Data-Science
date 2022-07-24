@@ -1,0 +1,126 @@
+---
+title: "Week10_jMadsen"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(caret)
+```
+
+## R Markdown
+
+```{r}
+# Assignment: Week 10
+# Name: Madsen, Justin
+# Date: 2022-02-18
+
+
+library(ggplot2)
+library(foreign)
+library(readxl)
+
+## Set the working directory to the root of your DSC 520 directory
+setwd("C:\\Users\\MyDir\\Documents\\GitHub\\dsc520\\")
+
+# grab the data file
+thoracic_data <- read_xlsx("data/ThoraricSurgery.xlsx")
+
+## Below is a list of variables and what they mean for my reference. I haven't figured out how to edit the 
+## .arff file yet. 
+# DGN: Diagnosis - specific combination of ICD-10 codes for primary and secondary as well multiple tumours if any (DGN3,DGN2,DGN4,DGN6,DGN5,DGN8,DGN1)
+# PRE4: Forced vital capacity - FVC (numeric)
+# PRE5: Volume that has been exhaled at the end of the first second of forced expiration - FEV1 (numeric)
+# PRE6: Performance status - Zubrod scale (PRZ2,PRZ1,PRZ0)
+# PRE7: Pain before surgery (T,F)
+# PRE8: Haemoptysis before surgery (T,F)
+# PRE9: Dyspnoea before surgery (T,F)
+# PRE10: Cough before surgery (T,F)
+# PRE11: Weakness before surgery (T,F)
+# PRE14: T in clinical TNM - size of the original tumour, from OC11 (smallest) to OC14 (largest) (OC11,OC14,OC12,OC13)
+# PRE17: Type 2 DM - diabetes mellitus (T,F)
+# PRE19: MI up to 6 months (T,F)
+# PRE25: PAD - peripheral arterial diseases (T,F)
+# PRE30: Smoking (T,F)
+# PRE32: Asthma (T,F)
+# AGE: Age at surgery (numeric)
+# Risk1Y: 1 year survival period - (T)rue value if died (T,F)
+
+# head() to grab the headers
+head(thoracic_data)
+
+# now we make the glm. set family to binomial, the instructions said binary,
+# however the reasoning here is we're looking at yes/no variables and this makes
+# binomial the best choice.
+glm.risk <- glm(Risk1Yr ~ AGE + DGN + PRE4 + PRE5 + PRE6 + PRE7 + PRE9 + PRE10 + 
+                  PRE11 + PRE14 + PRE17 + PRE19 + PRE25 + PRE30 + PRE32, 
+                data = thoracic_data, family = binomial(link = "logit"))
+
+# summarize function
+summary(glm.risk)
+
+### Significant Z-Score >= 1.25 (abs value z-score)
+## Positive impacts to dying within a year of surgery (more likely to die)
+# Patients with Dyspnoea, pain or weakness before surgery, diabetes,
+# had an increased chance of death
+
+## Tumor Size
+# Increased tumor size had an increased Risk chance.
+
+## Negative impacts to dying within a year of surgery (less likely to die)
+# Patients with higher FVC, FEV1 had a decreased odds of death
+# As expected, the data supports the idea that the more health problems you have
+# before a surgery, the more likely you will experience post-surgery complications
+
+
+## Let's perform predictions
+# here we run the model
+glm.predict.risk <- predict(glm.risk, thoracic_data, type = "response")
+
+# convert model responses to 1s and 0s
+thoracic_data$risk.predict <- ifelse(glm.predict.risk >= .5, 1, 0)
+
+# take the mean of the prediction
+mean.risk.predict <- mean(thoracic_data$risk.predict)
+mean.risk.predict
+
+# take the mean of the observed value
+mean.risk <- mean(thoracic_data$Risk1Yr)
+mean.risk
+
+# divide prediction mean by the label mean 
+risk.predict.accuracy <- mean.risk.predict / mean.risk
+risk.predict.accuracy
+
+# the model was only 21.4% accurate
+
+
+## binary classification data
+# build the df
+binary_df <- read.csv("data/binary-classifier-data.csv")
+
+# build model
+glm.label <- glm(label ~ x + y, data = binary_df, family = binomial(link = "logit"))
+
+# run the model
+glm.predict.label <- predict(glm.label, binary_df, type = "response")
+
+# convert model responses to 1s and 0s
+binary_df$label.predict <- ifelse(glm.predict.label >= .5, 1, 0)
+
+# take the mean of the prediction
+mean.label.predict <- mean(binary_df$label.predict)
+mean.label.predict
+
+# take the mean of the observed value
+mean.label <- mean(binary_df$label)
+mean.label
+
+# divide prediction mean by the label mean 
+label.predict.accuracy <- mean.label.predict / mean.label
+label.predict.accuracy
+
+# the model overforecasted the real data by 7.1135%
+
+```

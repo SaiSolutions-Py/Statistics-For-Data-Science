@@ -1,0 +1,129 @@
+---
+title: "assignment_05_jMadsen"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+
+# Assignment: ASSIGNMENT 5
+# Name: Madsen, Justin
+# Date: 2022-01-30
+
+# import the boys
+library(rmarkdown)
+library(ggplot2)
+library(ggm)
+
+## Set the working directory to the root of your DSC 520 directory
+setwd("C:\\Users\\My Dick\\Documents\\GitHub\\dsc520\\")
+
+## Load the `data/r4ds/heights.csv` to
+heights_df <- read.csv("data/r4ds/heights.csv")
+
+## Using `cor()` compute correlation coefficients for
+## height vs. earn
+cor(heights_df$height, heights_df$earn)
+### age vs. earn
+cor(heights_df$age, heights_df$earn)
+### ed vs. earn
+cor(heights_df$ed, heights_df$earn)
+
+## Spurious correlation
+## The following is data on US spending on science, space, and technology in millions of today's dollars
+## and Suicides by hanging strangulation and suffocation for the years 1999 to 2009
+## Compute the correlation between these variables // 0.9920817
+tech_spending <- c(18079, 18594, 19753, 20734, 20831, 23029, 23597, 23584, 25525, 27731, 29449)
+suicides <- c(5427, 5688, 6198, 6462, 6635, 7336, 7248, 7491, 8161, 8578, 9000)
+cor(tech_spending, suicides)
+
+
+# SURVEY.CSV SECTION
+# “Is there a significant relationship between the amount of time spent reading
+# and the time spent watching television?”
+
+# create df
+survey_df <- read.csv("data/student-survey.csv")
+
+# The TimeReading variable appears to be in hours, where as the TimeTV is in minutes
+# Changing the TimeReading column to an equivalent amount of minutes would provide
+# a more apt comparison. However, the slope of the graph would be much steeper since one axis would end up
+# being almost 5-6x more than the other axis. 
+
+# How was "Happiness" recorded?
+
+## Correlation coefficient/analysis
+# This negative correlation indicates that the higher TimeReading is, the lower TimeTV is
+cor(survey_df$TimeReading, survey_df$TimeTV)
+# This negative correlation indicates that the higher TimeReading is, the lower Happiness is
+cor(survey_df$TimeReading, survey_df$Happiness)
+# This negative correlation indicates that the higher gender and TimeReading have little correlation
+# This is a result of the amount surveyed.
+cor(survey_df$TimeReading, survey_df$Gender)
+# More TV means more happiness
+cor(survey_df$TimeTV, survey_df$Happiness)
+# This is close enough to 0 to not have a correlation. May need more data.
+cor(survey_df$TimeTV, survey_df$Gender)
+# One of the genders is definitely happier. I'm just not sure which one is 1 and 0.
+cor(survey_df$Happiness, survey_df$Gender)
+
+# Let's use GGally to get all correlations and their visual plots
+# The gender graph can be ignored, it's a 2 variable test, not a scale.
+GGally::ggpairs(survey_df)
+
+# cor.test I went with Pearson. It's the only one that didn't produce an error about 
+# tying p-values. My prediction is a negative correlation value.
+cor.test(survey_df$TimeReading, survey_df$TimeTV, alternative = "two.sided", 
+         method = "pearson", conf.level = 0.95)
+
+# Pearson test again, but with 99% confidence level
+cor.test(survey_df$TimeReading, survey_df$TimeTV, alternative = "two.sided", 
+         method = "pearson", conf.level = 0.99)
+
+## TimeReading
+# GGally shows that TimeReading has a negative correlation with how much time is spent
+# reading. Gender's correlation it close enough to 0, that I would need more data to
+# better determine a correlation. Happiness seems to go down as more time spent reading.
+
+## TimeTV
+# TimeTV has a positive correlation with happiness, showing that the more people
+# watch tv, the happier they are. Once again, gender is close enough to 0 that I
+# would need more data. 
+
+## Happiness
+# Happiness has a positive correlation with gender. Without knowing which is male
+# and female, a conclusion is hard to come to. One gender is clearly happier than
+# the other in this sample though.
+
+## Gender
+# Due to being a "this or that" section, this variable is the hardest to come to
+# a conclusion on. There are definite correlations to happiness though. 
+
+# For a refresher, correlation coefficient
+cor(survey_df$TimeReading, survey_df$TimeTV)
+
+# Let's get coefficient of determination by squaring it
+cor(survey_df$TimeReading, survey_df$TimeTV)^2
+
+# This value is close to 1. There is relatively high amount of correlation
+# between the 2 variables. We would need more data to get more confidence in
+# this analysis though. I would determine there that more time watching TV does
+# lead people to read less. This also tracks, since there is only so much time
+# in the day. Unless someone is watching subtitled anime, they aren't really
+# able to do both at once. 
+
+## partial analysis
+pcor(c("TimeTV", "TimeReading", "Gender"), var(survey_df))
+pcor(c("TimeTV", "TimeReading", "Gender"), var(survey_df))^2
+
+## The correlation values are closer to -1 and 1 respectively. This tells me
+# that the previous results are independent of gender. I ran the pcor with 
+# the control being happiness, and came to the same conclusion
+
+```

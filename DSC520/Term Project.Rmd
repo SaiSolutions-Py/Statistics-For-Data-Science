@@ -1,0 +1,138 @@
+---
+title: "TermProject_jMadsen"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+## R Markdown
+
+### STEP 1
+
+## Problem
+# Can a correlation between the Big Mac Index and the USA's past/current economic health be used
+# to predict the future economic health in the USA?
+
+## Why should someone care?
+# With retail investors turning to apps in order to try and make profits in the stock market,
+# looking at various data sets could help point a good time to purchase a larger investment/offload
+# prior to a potential drop.
+
+## Questions
+# Which model should be used?
+# Does the Big Mac Index accurately correlate to the USA economic health?
+# What's the best way to clean the data and avoid excess noise?
+# How do we take the model then apply future growth to obtain a guess?
+# What is an acceptable value to indicate a correlation?
+# Does the Big Mac Index drop during recessions?
+# Does the Big Mac Index increase proportional to the growth of the GDP?
+
+## Proposed course of attack
+# First is to clean the data. I've grabbed global data, so creating subsets of USA data
+# will be ideal. Then doing best fit lines for both the Big Mac Index and the Stock Index.
+# Compare the lines to see if they're similar. There are vastly more data points in the stock index.
+# Take whatever correlation to see if there are any insights the Indecies can provide and build models
+# off the data. Append the growth value from the GEP data to these models to see if the correlation continues.
+
+## How will this help?
+# This process will determine if a correlation exists (part a of the problem), and then forecast out if the
+# growth of the stock market/Big Mac Index are correlated (part b of the problem).
+
+## location of data
+# big_mac - https://github.com/TheEconomist/big-mac-data/blob/master/source-data/big-mac-source-data.csv
+# Price of Big Macs over the last 20 years, as collected by the Economist around the world.
+
+# gep_data - https://datacatalog.worldbank.org/search/dataset/0037888/Global-Economic-Prospects
+# World Bank's semi-annual publication on the world economy, provides several years of forecasted growth
+
+# stock_index - https://www.kaggle.com/mattiuzc/stock-exchange-data?select=indexProcessed.csv
+# 14 stock exchanges since 1966 and their (almost) daily value.
+
+## Packages
+# ggplot2 definitely for starters.
+# Other required packages will be loaded as needed. Need to remember to update this as I find more.
+
+## Plots/Graphs
+# plotting the Big Mac Index and Stock Market throughout the time period will be good to see
+# a starting trend. Applying a best fit line and comparing the slope will also help.
+
+## What don't I know
+# How to take a model for one data set, then apply a differently formatted dataset to get modelled values?
+# If the accuracy is low on the initial index models, will the forecasted growth matter?
+# Does this growth account for inflation?
+
+### STEP 2
+
+## final dataset
+# nya.subset is the bulkier dataset. I don't know how to best to tackle what dates matter the most.
+# Everything else is contained enough to provide required information.
+
+## What information is not self evident
+# How does the cost of beef over the years impact the Big Mac index?
+# Is this evident in the Stock Market Index?
+
+## Different Ways
+# I could take the monthly stock market data instead of daily.
+# I could also focus the stock dates that closely match the Big Mac Index price days.
+# Either of these would lower the fidelity of the model, since dips and recessions matter.
+
+## Slice and dice
+# Using subsets, I've dropped all the data that I deemed unnecessary.
+# I've gutted the stock index data to only include the dates that the Big Mac file covers.
+
+## Summarize
+# Price fluctuations in the Big Mac Index should "almost" correlate to the same fluctations
+# in the Stock Index. I can then prog that out to see what the future costs might be.
+
+## Plots/Graphs
+# plotting the Big Mac Index and Stock Market throughout the time period will be good to see
+# a starting trend. Applying a best fit line and comparing the slope will also help.
+
+## Machine Learning
+# I plan on using logistic modeling. I don't know enough about ML to incorporate larger
+# solutions to this data set.
+
+## Questions
+# Why male models?
+# What can I do with this information?
+# Which family of log modeling will be the way to go?
+
+
+```{r}
+# import the boys
+library(ggplot2)
+
+## Set the working directory to the root of your DSC 520 directory
+setwd("C:\\Users\\MyDir\\Documents\\GitHub\\dsc520\\")
+
+# pull in the data sets
+big_mac <- read.csv("data/big-mac-source-data.csv")
+gep_data <- read.csv("data/GEPData.csv")
+stock_index <- read.csv("data/indexProcessed.csv")
+
+# time for some spring cleaning. Focus on 2000 and beyond in the USA.
+# clean out any unneeded columns
+nya.subset <- subset(stock_index, Index == "NYA")
+nya.subset <- subset(nya.subset, Date >= "2000-04-01")
+nya.subset <- subset(nya.subset, Date <= "2021-01-01")
+nya.subset <- subset(nya.subset, select = -c(Volume, Open, High, Low, Adj.Close, CloseUSD))
+
+big_mac.subset <- subset(big_mac, iso_a3 == "USA")
+big_mac.subset <- subset(big_mac.subset, date <= "2021-01-01")
+big_mac.subset <- subset(big_mac.subset, select = -c(name, iso_a3, dollar_ex, GDP_dollar))
+
+gep.subset <- subset(gep_data, Country.Code == "USA")
+gep.subset <- subset(gep.subset, select = -c(ï..Country.Name, Indicator.Name, Indicator.Code, X))
+
+
+# Let's provide headers to show the jist of the data
+head(nya.subset)
+head(big_mac.subset)
+head(gep.subset)
+
+
+```
+
